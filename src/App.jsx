@@ -76,7 +76,36 @@ function Spinner() {
   )
 }
 
+const PAGE_SIZE = 15
+
+function Pagination({ page, totalPages, onPrev, onNext }) {
+  if (totalPages <= 1) return null
+  return (
+    <div className="flex items-center justify-between mt-4 px-1">
+      <button
+        onClick={onPrev}
+        disabled={page === 0}
+        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        ← Prev
+      </button>
+      <span className="text-sm text-gray-500">
+        Page {page + 1} of {totalPages}
+      </span>
+      <button
+        onClick={onNext}
+        disabled={page >= totalPages - 1}
+        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        Next →
+      </button>
+    </div>
+  )
+}
+
 function ResultsTable({ data }) {
+  const [page, setPage] = useState(0)
+
   if (!data || data.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
@@ -85,98 +114,121 @@ function ResultsTable({ data }) {
     )
   }
 
+  const totalPages = Math.ceil(data.length / PAGE_SIZE)
+  const slice = data.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full text-sm text-left">
-        <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
-          <tr>
-            <th className="px-4 py-3 font-semibold">Name</th>
-            <th className="px-4 py-3 font-semibold">Mobile</th>
-            <th className="px-4 py-3 font-semibold">Address</th>
-            <th className="px-4 py-3 font-semibold">Rating</th>
-            <th className="px-4 py-3 font-semibold">Reviews</th>
-            <th className="px-4 py-3 font-semibold">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {data.map((row, i) => (
-            <tr key={i} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-3 font-medium text-gray-900 max-w-[180px] truncate">
-                {row.name || row.Name || '—'}
-              </td>
-              <td className="px-4 py-3 text-gray-600">
-                {row.mobile || row.Mobile || row.phone || row.Phone || '—'}
-              </td>
-              <td className="px-4 py-3 text-gray-600 max-w-[240px]">
-                <span title={row.address || row.Address || ''}>
-                  {row.address || row.Address || '—'}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                {row.rating || row.Rating ? (
-                  <span className="inline-flex items-center gap-1 text-amber-600">
-                    <span>★</span>
-                    {row.rating || row.Rating}
+    <>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
+            <tr>
+              <th className="px-4 py-3 font-semibold">#</th>
+              <th className="px-4 py-3 font-semibold">Name</th>
+              <th className="px-4 py-3 font-semibold">Mobile</th>
+              <th className="px-4 py-3 font-semibold">Address</th>
+              <th className="px-4 py-3 font-semibold">Rating</th>
+              <th className="px-4 py-3 font-semibold">Reviews</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {slice.map((row, i) => (
+              <tr key={page * PAGE_SIZE + i} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3 text-gray-400 text-xs">{page * PAGE_SIZE + i + 1}</td>
+                <td className="px-4 py-3 font-medium text-gray-900 max-w-[180px] truncate">
+                  {row.name || row.Name || '—'}
+                </td>
+                <td className="px-4 py-3 text-gray-600">
+                  {row.mobile || row.Mobile || row.phone || row.Phone || '—'}
+                </td>
+                <td className="px-4 py-3 text-gray-600 max-w-[240px]">
+                  <span title={row.address || row.Address || ''}>
+                    {row.address || row.Address || '—'}
                   </span>
-                ) : (
-                  '—'
-                )}
-              </td>
-              <td className="px-4 py-3 text-gray-600">
-                {row.reviews || row.Reviews || row.review_count || '—'}
-              </td>
-              <td className="px-4 py-3">
-                {(row.status || row.Status) ? (
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    String(row.status || row.Status).toLowerCase() === 'open'
+                </td>
+                <td className="px-4 py-3">
+                  {row.rating || row.Rating ? (
+                    <span className="inline-flex items-center gap-1 text-amber-600">
+                      <span>★</span>
+                      {row.rating || row.Rating}
+                    </span>
+                  ) : (
+                    '—'
+                  )}
+                </td>
+                <td className="px-4 py-3 text-gray-600">
+                  {row.reviews || row.Reviews || row.review_count || '—'}
+                </td>
+                <td className="px-4 py-3">
+                  {(row.status || row.Status) ? (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${String(row.status || row.Status).toLowerCase() === 'open'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {row.status || row.Status}
-                  </span>
-                ) : '—'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                      }`}>
+                      {row.status || row.Status}
+                    </span>
+                  ) : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPrev={() => setPage((p) => Math.max(0, p - 1))}
+        onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+      />
+    </>
   )
 }
 
 function CSVPreviewTable({ csvText }) {
+  const [page, setPage] = useState(0)
   const lines = csvText.trim().split('\n').filter(Boolean)
   if (lines.length === 0) return <div className="text-center py-12 text-gray-500">No data to preview.</div>
 
   const headers = lines[0].split(',').map((h) => h.replace(/^"|"$/g, '').trim())
-  const rows = lines.slice(1, 6).map((line) =>
+  const allRows = lines.slice(1).map((line) =>
     line.split(',').map((cell) => cell.replace(/^"|"$/g, '').trim())
   )
+  const totalPages = Math.ceil(allRows.length / PAGE_SIZE)
+  const rows = allRows.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <p className="text-xs text-gray-400 px-4 py-2 bg-gray-50 border-b border-gray-200">
-        Showing first {rows.length} of {lines.length - 1} rows
-      </p>
-      <table className="w-full text-sm text-left">
-        <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
-          <tr>
-            {headers.map((h, i) => (
-              <th key={i} className="px-4 py-3 font-semibold">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {rows.map((row, i) => (
-            <tr key={i} className="hover:bg-gray-50">
-              {row.map((cell, j) => (
-                <td key={j} className="px-4 py-3 text-gray-700">{cell || '—'}</td>
+    <>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <p className="text-xs text-gray-400 px-4 py-2 bg-gray-50 border-b border-gray-200">
+          Showing rows {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, allRows.length)} of {allRows.length}
+        </p>
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
+            <tr>
+              {headers.map((h, i) => (
+                <th key={i} className="px-4 py-3 font-semibold">{h}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {rows.map((row, i) => (
+              <tr key={i} className="hover:bg-gray-50">
+                {row.map((cell, j) => (
+                  <td key={j} className="px-4 py-3 text-gray-700">{cell || '—'}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPrev={() => setPage((p) => Math.max(0, p - 1))}
+        onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+      />
+    </>
   )
 }
 
@@ -202,10 +254,29 @@ export default function App() {
     form.keywords.forEach((kw) => params.append('keywords', kw))
     params.set('city', form.city)
     params.set('state', form.state)
-    params.set('radius', form.radius)
+    // ✅ convert km → meters
+    const radiusInMeters = Number(form.radius || 0) * 1000
+    params.set('radius', radiusInMeters)
     params.set('limit', form.limit)
     params.set('format', form.format)
     return `${API_URL}?${params.toString()}`
+  }
+  const convertToCSV = (data) => {
+    if (!data || data.length === 0) return ''
+
+    const headers = Object.keys(data[0])
+
+    const csvRows = [
+      headers.join(','), // header row
+      ...data.map(row =>
+        headers.map(field => {
+          const val = row[field] ?? ''
+          return `"${String(val).replace(/"/g, '""')}"`
+        }).join(',')
+      )
+    ]
+
+    return csvRows.join('\n')
   }
 
   const handleSubmit = async (e) => {
@@ -216,7 +287,7 @@ export default function App() {
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(form))
-    } catch {}
+    } catch { }
 
     try {
       const url = buildURL()
@@ -226,19 +297,37 @@ export default function App() {
         throw new Error(`API error: ${res.status} ${res.statusText}`)
       }
 
-      if (form.format === 'csv') {
-        const text = await res.text()
-        setResult({ type: 'csv', data: text })
+      const contentType = res.headers.get('content-type') || ''
+
+      // ✅ CSV / FILE HANDLING (FIXED)
+      if (form.format === 'csv' || !contentType.includes('application/json')) {
+        const blob = await res.blob()
+        const text = await blob.text() // only for preview
+
+        setResult({
+          type: 'csv',
+          blob,
+          text
+        })
       } else {
+        // ✅ JSON HANDLING
         const json = await res.json()
-        // Handle various response shapes
-        const rows = Array.isArray(json)
-          ? json
-          : json.data || json.results || json.items || []
-        setResult({ type: 'json', data: rows, raw: json })
+
+        const rows =
+          json?.message ||
+          json?.data?.message ||
+          json?.results?.message ||
+          json?.items?.message ||
+          (Array.isArray(json) ? json : [])
+
+        setResult({
+          type: 'json',
+          data: Array.isArray(rows) ? rows : [],
+          raw: json
+        })
       }
     } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.')
+      setError(err.message || 'Something went wrong.')
     } finally {
       setLoading(false)
     }
@@ -246,15 +335,29 @@ export default function App() {
 
   const downloadJSON = () => {
     if (!result) return
-    const blob = new Blob([JSON.stringify(result.raw ?? result.data, null, 2)], {
-      type: 'application/json',
-    })
+
+    const blob = new Blob(
+      [JSON.stringify(result.raw ?? result.data, null, 2)],
+      { type: 'application/json' }
+    )
+
     triggerDownload(blob, 'results.json')
   }
 
   const downloadCSV = () => {
     if (!result) return
-    const blob = new Blob([result.data], { type: 'text/csv' })
+
+    let blob
+
+    if (result.type === 'csv') {
+      // already CSV from API
+      blob = result.blob
+    } else {
+      // convert JSON → CSV
+      const csv = convertToCSV(result.data)
+      blob = new Blob([csv], { type: 'text/csv' })
+    }
+
     triggerDownload(blob, 'results.csv')
   }
 
@@ -348,12 +451,12 @@ export default function App() {
             {/* Radius */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Radius (km)
+                Radius (KM)
               </label>
               <input
                 type="number"
                 min={1}
-                max={100}
+                max={15000}
                 value={form.radius}
                 onChange={(e) => set('radius', Number(e.target.value))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -368,7 +471,7 @@ export default function App() {
               <input
                 type="number"
                 min={1}
-                max={200}
+                max={999999}
                 value={form.limit}
                 onChange={(e) => set('limit', Number(e.target.value))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -431,12 +534,10 @@ export default function App() {
               </div>
               <div className="flex gap-2">
                 {result.type === 'json' && (
-                  <button
-                    onClick={downloadJSON}
-                    className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-                  >
-                    ↓ Download JSON
-                  </button>
+                  <>
+                    <button onClick={downloadJSON}>↓ JSON</button>
+                    <button onClick={downloadCSV}>↓ CSV</button>
+                  </>
                 )}
                 {result.type === 'csv' && (
                   <button
@@ -450,7 +551,7 @@ export default function App() {
             </div>
 
             {result.type === 'json' && <ResultsTable data={result.data} />}
-            {result.type === 'csv' && <CSVPreviewTable csvText={result.data} />}
+            {result.type === 'csv' && <CSVPreviewTable csvText={result.text} />}
           </div>
         )}
       </div>
